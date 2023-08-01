@@ -54,7 +54,7 @@ function NotificationCategoryPreferences({
   return preferenceData.sections?.map((section, index) => {
     return (
       <div style={{ marginBottom: 24 }} key={index}>
-        {section?.name && (
+        {section?.name && section.name==="DoodleDocs" &&(
           <div
             style={{
               backgroundColor: "#FAFBFB",

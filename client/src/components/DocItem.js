@@ -6,10 +6,8 @@ export default function DocItem(props) {
   var own = "Owner";
   var date = props.doc.date;
   const host = process.env.REACT_APP_PORT;
-  if(props.doc.user!=props.doc.owner)own = "Shared";
   
   const [name,setName] = React.useState("temp");
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -18,7 +16,7 @@ export default function DocItem(props) {
           headers: {
             'Content-Type': "application/json",
           },
-          body: JSON.stringify({ id: props.doc.owner })
+          body: JSON.stringify({ id: props.doc.author })
         });
         const json = await response.json();
         setName(json.name);
@@ -49,13 +47,13 @@ export default function DocItem(props) {
     <div onClick={handleClick} className='container-sm' style={{maxWidth:"50%",marginBottom:"100px",cursor:"pointer"}}>
      <div className="card">
      <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
-     <div style={{fontWeight:"bold"}}>{own}</div>
-     <div><strong>Created on: </strong>{new Date(date).toLocaleString()}</div>
+     <div style={{fontWeight:"bold"}}>{`Author : ${name}`}</div>
+     <div><strong>Last Edit: </strong>{new Date(props.doc.updatedAt).toLocaleString()}</div>
      </div>
      <div className="card-body d-flex flex-column" style={{minHeight: "150px"}}>
       <blockquote className="blockquote mb-0 flex-grow-1">
         <p>{convertToPlain(props.doc.textfile).length > 200 ? `${convertToPlain(props.doc.textfile).slice(0, 200)}...` : convertToPlain(props.doc.textfile)}</p>
-        <footer className="blockquote-footer mt-auto">{name} <cite title="Source Title"></cite></footer>
+        <footer className="blockquote-footer mt-auto">Created on : {new Date(date).toLocaleString()}<cite title="Source Title"></cite></footer>
       </blockquote>
     </div>
     </div>

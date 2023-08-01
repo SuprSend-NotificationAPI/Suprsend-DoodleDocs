@@ -10,8 +10,8 @@ const Docs = require("./models/doc")
 var jwt = require("jsonwebtoken")
 const JWT_SECRET = process.env.JWT_SECRET
 const cors = require('cors');
-const {Suprsend} = require("@suprsend/node-sdk");
-const { Workflow } = require("@suprsend/node-sdk")
+const { Suprsend} = require("@suprsend/node-sdk");
+const { Event } = require("@suprsend/node-sdk");
 const supr_client = new Suprsend(process.env.WKEY, process.env.WSECRET);
 //middleware if we want to read the json and req file
 app.use(cors());
@@ -68,7 +68,8 @@ app.post("/login",async(req,res)=>{
 
 app.get("/fetchalldocs",fetchuser,async(req,res)=>{
     try {
-      const docs = await Docs.find({user : req.user.id});
+      const docs = await Docs.find({ collaborators: { $elemMatch: { user: req.user.id } } })
+      .sort({ updatedAt: -1 });
       res.json(docs);
     } catch (error) {
     console.error(error.message);
@@ -80,11 +81,13 @@ app.get("/fetchalldocs",fetchuser,async(req,res)=>{
 
 app.post("/adddoc",fetchuser,async(req,res)=>{
   try {
+    const currentDate = new Date();
     const {textfile} = req.body;
     const doc = new Docs({
-    user:req.user.id,
+    author:req.user.id,
     textfile : textfile,
-    owner : req.user.id,
+    collaborators: [{ user: req.user.id }],
+    updatedAt : currentDate,
   })
   const saveddoc = await doc.save();
   res.json(saveddoc);
@@ -101,7 +104,22 @@ app.put("/updatedoc/:id",async (req, res) => {
   try {
       let doc = await Docs.findById(req.params.id);
       if(!doc){return res.status(404).send("NOT Found")}
-      doc = await Docs.findByIdAndUpdate(req.params.id, { textfile: req.body.textfile }, { new: true });
+      doc = await Docs.findByIdAndUpdate(req.params.id, { textfile: req.body.textfile, updatedAt: new Date() }, { new: true });
+      
+      
+      for (const collaborator of doc.collaborators) {
+        const collaboratorId = collaborator.user;
+        const user = await User.findById(collaboratorId);
+        const distinct_id = user.email;
+        const event_name = "DOCEDIT" 
+        const properties = {				
+          "name":req.params.id,
+        }  
+        const event = new Event(distinct_id, event_name, properties)
+        const response  = supr_client.track_event(event)
+        response.then((res) => console.log("response", res));
+      }
+
       res.json({doc});
   } catch (error) {
       console.error(error.message);
@@ -110,8 +128,7 @@ app.put("/updatedoc/:id",async (req, res) => {
 })
 
 
-
-/***************************** get all docs *******************************************************/
+/***************************** get doc owner*******************************************************/
 
 app.post("/getdocowner",async(req,res)=>{
   try {
@@ -129,7 +146,7 @@ app.delete("/deletedoc/:id",async (req, res) => {
   try {
       let doc = await Docs.findById(req.params.id);
       if(!doc){return res.status(404).send("NOT Found")}
-      doc = await Docs.findByIdAndDelete(req.params.id, { textfile: req.textfile });
+      doc = await Docs.findByIdAndDelete(req.params.id);
       res.json({doc});
   } catch (error) {
       console.error(error.message);
@@ -138,7 +155,8 @@ app.delete("/deletedoc/:id",async (req, res) => {
 })
 
 
-/*****************************get doc************************************************************* */
+/*****************************get doc***************************************************************/
+
 app.get("/getdoc/:id",async(req,res)=>{
   try {
     let doc = await Docs.findById(req.params.id);
@@ -156,25 +174,22 @@ app.get("/getdoc/:id",async(req,res)=>{
 app.post("/sharedoc", fetchuser, async (req, res) => {
   try {
     let success = false;
-    const { share, textfile } = req.body;
+    const { share, docid } = req.body;
     let user = await User.findOne({ email: share });
     
     if (!user) {
       return res.status(404).json({ success, message: "no such user exists" });
     }
-    
     let user2 = await User.findById(req.user.id);
-    
-    const doc = new Docs({
-      user: user._id,
-      textfile: textfile,
-      owner: req.user.id,
-    });
- 
-    const saveddoc = await doc.save();
-    success = true;
+    let doc = await Docs.findById(docid);
+    if (!doc) {
+      return res.status(404).json({ success,error: 'Document not found' });
+    }
+    doc.collaborators.push({ user: user._id });
+    await doc.save();
 
-    const { Event } = require("@suprsend/node-sdk");
+    success = true;
+    
 
     const distinct_id = user.email; 
     const event_name = "DOCSHARE" 
@@ -186,16 +201,14 @@ app.post("/sharedoc", fetchuser, async (req, res) => {
     const event = new Event(distinct_id, event_name, properties)
     const response  = supr_client.track_event(event)
     response.then((res) => console.log("response", res));
-    
 
-   return res.json({ success, saveddoc });
+   return res.json({ success, doc});
 
   } catch (error) {
     console.error(error.message);
     return res.status(500).send("some error occurred");
   }
 });
-
 
 /**********************listening on port **************************************/
 

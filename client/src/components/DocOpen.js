@@ -2,7 +2,6 @@ import React, {useContext,useState,useRef, useEffect} from 'react';
 import docContext from '../context/document/docContext';
 import ReactQuill from 'react-quill';
 import {Link, useParams} from "react-router-dom"
-import suprsend from "@suprsend/web-sdk";
 import {useNavigate} from 'react-router-dom';
 import 'react-quill/dist/quill.snow.css';
 
@@ -25,7 +24,7 @@ const modules = {
 export default function DocOpen(props) {
   const {id} = useParams();
   const host = process.env.REACT_APP_PORT;
-  const [data,setData] = React.useState({user:"hi",owner:"no"});
+  const [data,setData] = React.useState({});
   const [value, setValue] = useState(data.textfile);
 
   useEffect(() => {
@@ -65,10 +64,6 @@ export default function DocOpen(props) {
     ev.preventDefault();
     await editdoc(id,value)
     props.showAlert("Succesfully edited","success");
-    const property = {
-      "name":id
-    }
-    suprsend.track("DOCEDIT", property);
   }
 
   const handleClick = async (ev) => {
@@ -81,7 +76,7 @@ export default function DocOpen(props) {
         'Content-Type': 'application/json',
         "auth-token": localStorage.getItem('token')
       },
-      body: JSON.stringify({ share: formData, textfile: value })
+      body: JSON.stringify({ share: formData, docid:id })
     });
     const json = await response.json();
     if(!json.success){
@@ -151,7 +146,7 @@ export default function DocOpen(props) {
           </div>
           <div style={{display:"flex",justifyContent:"space-between"}}>
           <Link onClick={handledelete} className='btn btn-dark mx-3' style={{width:"150px",marginTop:"15px"}} to='/showalldocs' role='button'>Delete Doc</Link>
-          {(data.user==data.owner)&&<Link onClick={handleshare} className='btn btn-dark mx-3' style={{width:"150px",marginTop:"15px"}} to='/opendoc' role='button'>Share Doc</Link>}
+          <Link onClick={handleshare} className='btn btn-dark mx-3' style={{width:"150px",marginTop:"15px"}} to='/opendoc' role='button'>Share Doc</Link>
           <Link onClick={handleedit} className='btn btn-dark mx-3' style={{width:"150px",marginTop:"15px"}} to='/opendoc' role='button'>Save Doc</Link>
           </div>
         </div>

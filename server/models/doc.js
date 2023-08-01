@@ -1,19 +1,28 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const DocSchema = new Schema({
+const collaboratorSchema = new mongoose.Schema({
   user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
+    required: true,
+  },
+});
+
+const DocSchema = new Schema({
+  author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "user",
   },
   textfile: {
     type: String,
   },
-  owner :{
-    type : mongoose.Schema.Types.ObjectId,
-    ref:"user",
-  },
+  collaborators: [collaboratorSchema],
   date: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
     type: Date,
     default: Date.now,
   },
