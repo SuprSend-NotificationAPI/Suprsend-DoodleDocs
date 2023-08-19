@@ -7,7 +7,8 @@ export default function Register(props) {
    const [formData,setFormData] = React.useState({
         email:"",
         name : "",
-        phone : "",
+        countryCode : "+1",
+        phone : "", 
         password:"",
     })
     let navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function Register(props) {
           headers : {
              'content-type':'application/json'            
           },
-          body : JSON.stringify({email : formData.email,name : formData.name,phone : formData.phone
+          body : JSON.stringify({email : formData.email,name : formData.name,countryCode:formData.countryCode,phone : formData.phone
             ,password : formData.password})
         });
         const json = await response.json();
@@ -70,16 +71,30 @@ export default function Register(props) {
           name="name" />
           </div>
 
-        <div className="mb-3 mt-4">
+          <div className="mb-3 mt-4">
           <div>Enter Your Phone Number</div>
-          <input 
-          type="tel" 
-          className="form-control"
-          onChange={handleChange}
-          value={formData.phone}
-          inputMode="numeric"
-          name="phone" />
+          <div className="input-group">
+            <input
+              type="tel"
+              className="form-control"
+              onChange={handleChange}
+              value={formData.countryCode}
+              inputMode="numeric"
+              name="countryCode"
+              placeholder="Code"
+              style={{maxWidth:"60px"}}
+            />
+            <input
+              type="tel"
+              className="form-control"
+              onChange={handleChange}
+              value={formData.phone}
+              inputMode="numeric"
+              name="phone"
+              placeholder="Phone Number"
+            />
           </div>
+        </div>
 
         <div className="mb-4">
           <div> Enter Your Password</div>

@@ -20,28 +20,28 @@ app.use(express.json());
 /*******************************add to database and register on suprsend************************/
 
 app.post("/register",async(req,res)=>{
-    let success = false;
-    const user = await User.create({
-        email : req.body.email,
-        name : req.body.name,
-        phone : req.body.phone,
-        password : req.body.password
-    })
-    const data = {
-        user : {
-            id : user.id
-        }
-    }
-    const authtoken = jwt.sign(data,JWT_SECRET);
-    success = true;
-    const distinct_id = user.email;
-    const user1 = supr_client.user.get_instance(distinct_id);
-    user1.add_email(user.email) 
-    user1.add_sms("+"+user.phone) 
-    user1.add_whatsapp("+"+user.phone)
-    const response = user1.save()
-    response.then((res) => console.log("response", res));
-    res.json({success,authtoken});
+  let success = false;
+  const user = await User.create({
+      email : req.body.email,
+      name : req.body.name,
+      phone : req.body.countryCode+req.body.phone,
+      password : req.body.password
+  })
+  const data = {
+      user : {
+          id : user.id
+      }
+  }
+  const authtoken = jwt.sign(data,JWT_SECRET);
+  success = true;
+  const distinct_id = user.email;
+  const user1 = supr_client.user.get_instance(distinct_id);
+  user1.add_email(user.email) 
+  user1.add_sms("+"+user.phone) 
+  user1.add_whatsapp("+"+user.phone)
+  const response = user1.save()
+  response.then((res) => console.log("response", res));
+  res.json({success,authtoken});
 })
 
 /*****************************login user *******************************************************/
