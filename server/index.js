@@ -39,8 +39,13 @@ app.post("/register",async(req,res)=>{
   user1.add_email(user.email) 
   user1.add_sms("+"+user.phone) 
   user1.add_whatsapp("+"+user.phone)
-  const response = await user1.save()
-  response.then((res) => console.log("response", res));
+  try {
+    const response = await user1.save();
+    console.log("response", response);
+  } catch (error) {
+    console.error("Error saving user:", error);
+    success = false;
+  }
   res.json({success,authtoken});
 })
 
@@ -116,8 +121,12 @@ app.put("/updatedoc/:id",async (req, res) => {
           "name":req.params.id,
         }  
         const event = new Event(distinct_id, event_name, properties)
-        const response  = supr_client.track_event(event)
-        response.then((res) => console.log("response", res));
+        try {
+          const response = await supr_client.track_event(event);
+          console.log("response", response);
+        } catch (error) {
+          console.error("Error tracking event:", error);
+        }
       }
 
       res.json({doc});
@@ -199,8 +208,13 @@ app.post("/sharedoc", fetchuser, async (req, res) => {
     }  
     
     const event = new Event(distinct_id, event_name, properties)
-    const response  = supr_client.track_event(event)
-    response.then((res) => console.log("response", res));
+    try {
+      const response = await supr_client.track_event(event);
+      console.log("response", response);
+    } catch (error) {
+      console.error("Error tracking event:", error);
+      success = true;
+    }
 
    return res.json({ success, doc});
 
