@@ -197,9 +197,6 @@ app.post("/sharedoc", fetchuser, async (req, res) => {
     doc.collaborators.push({ user: user._id });
     await doc.save();
 
-    success = true;
-    
-
     const distinct_id = user.email; 
     const event_name = "DOCSHARE" 
     const properties = {				
@@ -210,10 +207,10 @@ app.post("/sharedoc", fetchuser, async (req, res) => {
     const event = new Event(distinct_id, event_name, properties)
     try {
       const response = await supr_client.track_event(event);
+      success = true;
       console.log("response", response);
     } catch (error) {
       console.error("Error tracking event:", error);
-      success = true;
     }
 
    return res.json({ success, doc});
